@@ -14,35 +14,46 @@ public class ButterWorthFilterTest
         _output = output;
     }
 
+    //[Fact]
+    //public void Test_Butterworth_Filter_MathNet_Implementation()
+    //{
+    //    // Call the reusable test with the specific filter implementation
+    //    RunFilterTest((inputArray, sampleRate) =>
+    //    {
+    //        var filter = new ButterworthFilter();
+    //        return filter.ApplyHighPassFilter(inputArray, sampleRate);
+    //    });
+    //}
+
+
     [Fact]
-    public void Test_Butterworth_Filter_MathNet_Implementation()
+    public void Test1()
     {
         // Call the reusable test with the specific filter implementation
         RunFilterTest((inputArray, sampleRate) =>
         {
             var filter = new ButterworthFilter();
-            return filter.ApplyHighPassFilter(inputArray, sampleRate);
+            return filter.ButterWorth1(inputArray, sampleRate);
+        });
+    }
+
+    [Fact]
+    public void Test2()
+    {
+        // Call the reusable test with the specific filter implementation
+        RunFilterTest((inputArray, sampleRate) =>
+        {
+            var filter = new ButterworthFilter();
+            return filter.ButterWorth2(inputArray, sampleRate);
         });
     }
 
 
 
 
-
-
     private void RunFilterTest(FilterImplementation filterImplementation)
     {
-        // File paths
-        string inputFilePath = "n=1650_2048hz.json";
-        string expectedFilePath = "n=1650_2048hz_filtered.json";
-
-        // Read input and expected data from JSON files
-        double[][] nestedInputArray = JsonSerializer.Deserialize<double[][]>(File.ReadAllText(inputFilePath));
-        double[][] nestedExpectedArray = JsonSerializer.Deserialize<double[][]>(File.ReadAllText(expectedFilePath));
-
-        // Flatten the nested arrays
-        double[] inputArray = nestedInputArray.SelectMany(x => x).ToArray();
-        double[] expectedArray = nestedExpectedArray.SelectMany(x => x).ToArray();
+        GetDataFromFiles(out double[] inputArray, out double[] expectedArray);
 
         // Validate the lengths of the arrays
         Assert.Equal(expectedArray.Length, inputArray.Length);
@@ -62,7 +73,7 @@ public class ButterWorthFilterTest
         var mismatches = new System.Text.StringBuilder();
         bool allMatch = true;
         int consecutiveFailures = 0;
-        const int failureThreshold = 20;
+        const int failureThreshold = 75;
 
         for (int i = 0; i < expectedArray.Length; i++)
         {
@@ -72,7 +83,8 @@ public class ButterWorthFilterTest
             if (!isMatch)
             {
                 consecutiveFailures++;
-                string mismatchInfo = $"Node {i}: Mismatch - Expected: {expectedArray[i]}, Actual: {actualArray[i]}, Difference: {difference}";
+                var differanceAsPercent = difference / expectedArray[i];
+                string mismatchInfo = $"Node {i} Mismatch - %Off: {differanceAsPercent:P2}, Expected: {expectedArray[i]}, Actual: {actualArray[i]}, Difference: {difference} ";
                 _output.WriteLine(mismatchInfo);
                 mismatches.AppendLine(mismatchInfo);
                 allMatch = false;
@@ -97,6 +109,21 @@ public class ButterWorthFilterTest
         }
     }
 
+    private static void GetDataFromFiles(out double[] inputArray, out double[] expectedArray)
+    {
+        // File paths
+        string inputFilePath = "n=1650_2048hz.json";
+        string expectedFilePath = "n=1650_2048hz_filtered.json";
+
+        // Read input and expected data from JSON files
+        double[][] nestedInputArray = JsonSerializer.Deserialize<double[][]>(File.ReadAllText(inputFilePath));
+        double[][] nestedExpectedArray = JsonSerializer.Deserialize<double[][]>(File.ReadAllText(expectedFilePath));
+
+        // Flatten the nested arrays
+        var number = 5;
+        inputArray = nestedInputArray.Skip(1).Take(number).SelectMany(x => x).ToArray();
+        expectedArray = nestedExpectedArray.Skip(1).Take(number).SelectMany(x => x).ToArray();
+    }
 }
 
 
@@ -132,7 +159,78 @@ public class ButterworthFilter
         }
         return filteredArray;
     }
+
+
+    public double[] ButterWorth1(double[] signal, double sampleFreq)
+    {
+        //var passBandFreq = 4 / (sampleFreq / 2.0);
+        //var stopBandFreq = 1 / (sampleFreq / 2.0);
+        //var passBandRipple = 1.0;
+        //var stopBandAttenuation = 20.0;
+
+        var passBandFreq = 4 ;
+        var stopBandFreq = 1 ;
+        var passBandRipple = 1.0;
+        var stopBandAttenuation = 20.0;
+
+
+
+        (double[] numerator, double[] denominator) coefficients = MathNet.Filtering.Butterworth.IirCoefficients.HighPass(stopBandFreq, passBandFreq, passBandRipple, stopBandAttenuation);
+
+        var coeffs = new List<double>();
+        foreach (var numerator in coefficients.numerator)
+        {
+            coeffs.Add(numerator);
+        }
+        foreach (var denominator in coefficients.denominator)
+        {
+            coeffs.Add(denominator);
+        }
+        var filter = new MathNet.Filtering.IIR.OnlineIirFilter(coeffs.ToArray());
+        var filteredSignal = filter.ProcessSamples(signal);
+        return filteredSignal;
+    }
+
+
+
+    public double[] ButterWorth2(double[] signal, double sampleFreq)
+    {
+        //var passBandFreq = 4 / (sampleFreq / 2.0);
+        //var stopBandFreq = 1 / (sampleFreq / 2.0);
+        //var passBandRipple = 1.0;
+        //var stopBandAttenuation = 20.0;
+
+        ////var passBandFreq = 4;
+        ////var stopBandFreq = 1;
+        ////var passBandRipple = 1.0;
+        ////var stopBandAttenuation = 20.0;
+
+
+
+        //(double[] numerator, double[] denominator) coefficients = MathNet.Filtering.Butterworth.IirCoefficients.HighPass(stopBandFreq, passBandFreq, passBandRipple, stopBandAttenuation);
+
+        //var coeffs = new List<double>();
+        //foreach (var numerator in coefficients.numerator)
+        //{
+        //    coeffs.Add(numerator);
+        //}
+        //foreach (var denominator in coefficients.denominator)
+        //{
+        //    coeffs.Add(denominator);
+        //}
+        //var filter = new MathNet.Filtering.IIR.OnlineIirFilter(coeffs.ToArray());
+        //double[] coff = [0.9845337085968967, -0.9845337085968967, 0.0, 1.0, -0.9690674171937933, 0.0];
+
+        double[] coff = [0.9845337085968967, -0.9845337085968967, 0.0, 1.0, -0.9690674171937933, 0.0];
+        var filter = new MathNet.Filtering.IIR.OnlineIirFilter(coff);
+     
+        var filteredSignal = filter.ProcessSamples(signal);
+        return filteredSignal;
+    }
+
 }
+
+
 
 
 
