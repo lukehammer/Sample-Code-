@@ -10,6 +10,7 @@
       <FixtureTestSelector>
         <FixtureName>CodeWars.Tests</FixtureName>
       </FixtureTestSelector>
+      <AllTestsSelector />
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>
