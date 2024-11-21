@@ -104,6 +104,7 @@ namespace DemoCode
 
             for (int i = 0; i < inputArrays.Length; i++)
             {
+                _output.WriteLine($"Checking Block {i} of {inputArrays.Length}");
                 double[] actualArray = filterImplementation(inputArrays[i]);
                 Assert.Equal(expectedArrays[i].Length, actualArray.Length);
 
@@ -116,6 +117,12 @@ namespace DemoCode
                         string mismatchInfo = $"Case {i}, Index {j} - Expected: {expectedArrays[i][j]:F6}, " +
                                               $"Actual: {actualArray[j]:F6}, Diff: {difference:F6}";
                         mismatches.AppendLine(mismatchInfo);
+                        _output.WriteLine(mismatchInfo);
+                    }
+                    if (difference != 0) 
+                    {
+                        string mismatchInfo = $"Case {i}, Index {j} - Expected: {expectedArrays[i][j]:F6}, " +
+                                           $"Actual: {actualArray[j]:F6}, Diff: {difference:F6}";
                         _output.WriteLine(mismatchInfo);
                     }
                 }
